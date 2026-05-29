@@ -91,13 +91,17 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 
 .loader-mandala {
   width: 90px;
+  height: 90px;
   margin: 0 auto 1.2rem;
+  position: relative;
 }
-
+.loader-mandala img{
+  position: absolute;
+}
 .loader-mandala svg { width: 100%; height: auto; }
 
-.spin-slow  { transform-origin: 60px 60px; animation: spinCW 8s linear infinite; }
-.spin-reverse { transform-origin: 60px 60px; animation: spinCCW 5s linear infinite; }
+.spin-slow  { transform-origin: center; animation: spinCW 8s linear infinite; }
+.spin-reverse { transform-origin: center; animation: spinCCW 5s linear infinite; }
 
 @keyframes spinCW  { to { transform: rotate(360deg); } }
 @keyframes spinCCW { to { transform: rotate(-360deg); } }
