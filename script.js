@@ -214,16 +214,20 @@
   });
 })();
 
-
-/* ── 7. RHYTHM VISUALIZER + AUDIO PLAYER UI ─────────────────────── */
+/* ── 7 REAL AUDIO PLAYER + RHYTHM VISUALIZER ─────────────────────── */
 (function initAudioPlayer() {
+  const audio    = document.getElementById('realAudio');
   const playBtn  = document.getElementById('playBtn');
   const vizBars  = document.getElementById('vizBars');
   const progress = document.getElementById('audioProgressFill');
   const timeEl   = document.getElementById('audioTime');
-  if (!playBtn || !vizBars) return;
+  const progressBar = document.getElementById('audioProgress');
 
-  // ─ Build visualizer bars ─
+  if (!audio || !playBtn || !vizBars || !progress || !timeEl) return;
+
+  // Prevent duplicate bars if script runs again
+  vizBars.innerHTML = '';
+
   const BAR_COUNT = 40;
   const bars = [];
 
@@ -235,9 +239,23 @@
     bars.push(bar);
   }
 
-  // ─ Dhime rhythm pattern ─
-  // Represents the 8-beat rhythmic cycle of Newar dhime music
-  // Values: 0–1 relative amplitude
+  const PLAY_ICON = `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+      <polygon points="5,3 19,12 5,21" fill="currentColor"/>
+    </svg>
+  `;
+
+  const PAUSE_ICON = `
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+      <rect x="6" y="4" width="4" height="16" fill="currentColor"/>
+      <rect x="14" y="4" width="4" height="16" fill="currentColor"/>
+    </svg>
+  `;
+
+  let rafId = null;
+
+  // Fake visualizer pattern.
+  // This does not analyze the MP3 waveform, but animates while audio plays.
   const DHIME_PATTERN = [
     1.0, 0.3, 0.7, 0.2, 0.85, 0.15, 0.6, 0.3,
     0.9, 0.25, 0.65, 0.1, 1.0, 0.2, 0.55, 0.35,
@@ -246,90 +264,126 @@
     0.95, 0.2, 0.7, 0.15, 0.8, 0.35, 0.55, 0.3
   ];
 
-  let isPlaying  = false;
-  let startTime  = 0;
-  let elapsed    = 0;
-  let rafId      = null;
-  const DURATION = 120; // seconds (2 min simulated)
-  const TEMPO    = 0.8; // beats per second
+  function formatTime(seconds) {
+    if (!Number.isFinite(seconds)) return '0:00';
 
-  // Play icon (triangle) / Pause icon (two rects)
-  const PLAY_ICON  = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>`;
-  const PAUSE_ICON = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></svg>`;
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
 
-  function animateBars(timestamp) {
-    const beat = (elapsed * TEMPO * 2) % 1; // 0–1 within beat
-    const beatIndex = Math.floor(elapsed * TEMPO * 2) % DHIME_PATTERN.length;
-
-    bars.forEach((bar, i) => {
-      // Each bar oscillates with different phase, influenced by dhime pattern
-      const phase  = (i / BAR_COUNT) * Math.PI * 2;
-      const base   = DHIME_PATTERN[(beatIndex + Math.floor(i * 0.8)) % DHIME_PATTERN.length];
-      const wave   = Math.sin(elapsed * 6 + phase) * 0.25 + 0.75;
-      const accent = Math.sin(beat * Math.PI) * 0.4; // beat accent
-      const height = Math.max(3, Math.round((base * wave + accent * base) * 55));
-      bar.style.height = height + 'px';
-    });
-
-    // Update progress
-    const pct = Math.min((elapsed / DURATION) * 100, 100);
-    progress.style.width = pct + '%';
-
-    // Update time
-    const mins = Math.floor(elapsed / 60);
-    const secs = Math.floor(elapsed % 60).toString().padStart(2, '0');
-    timeEl.textContent = `${mins}:${secs}`;
-
-    if (elapsed >= DURATION) {
-      stop();
-      return;
-    }
-
-    elapsed = (Date.now() - startTime) / 1000;
-    rafId = requestAnimationFrame(animateBars);
+    return `${mins}:${secs}`;
   }
 
   function flattenBars() {
-    bars.forEach(bar => { bar.style.height = '4px'; });
+    bars.forEach(bar => {
+      bar.style.height = '4px';
+    });
   }
 
-  function play() {
-    isPlaying = true;
-    startTime = Date.now() - elapsed * 1000;
-    rafId = requestAnimationFrame(animateBars);
+  function updateProgress() {
+    const duration = audio.duration || 0;
+    const current = audio.currentTime || 0;
+
+    if (duration > 0) {
+      const pct = (current / duration) * 100;
+      progress.style.width = `${pct}%`;
+    } else {
+      progress.style.width = '0%';
+    }
+
+    timeEl.textContent = formatTime(current);
+  }
+
+  function animateBars() {
+    const current = audio.currentTime || 0;
+    const tempo = 0.8;
+
+    const beat = (current * tempo * 2) % 1;
+    const beatIndex = Math.floor(current * tempo * 2) % DHIME_PATTERN.length;
+
+    bars.forEach((bar, i) => {
+      const phase = (i / BAR_COUNT) * Math.PI * 2;
+      const base = DHIME_PATTERN[(beatIndex + Math.floor(i * 0.8)) % DHIME_PATTERN.length];
+      const wave = Math.sin(current * 6 + phase) * 0.25 + 0.75;
+      const accent = Math.sin(beat * Math.PI) * 0.4;
+      const height = Math.max(3, Math.round((base * wave + accent * base) * 55));
+
+      bar.style.height = `${height}px`;
+    });
+
+    updateProgress();
+
+    if (!audio.paused && !audio.ended) {
+      rafId = requestAnimationFrame(animateBars);
+    }
+  }
+
+  function setPlayingUI() {
     playBtn.innerHTML = PAUSE_ICON;
-    playBtn.setAttribute('aria-label', 'Pause rhythm visualizer');
+    playBtn.setAttribute('aria-label', 'Pause audio');
   }
 
-  function pause() {
-    isPlaying = false;
-    cancelAnimationFrame(rafId);
+  function setPausedUI() {
     playBtn.innerHTML = PLAY_ICON;
-    playBtn.setAttribute('aria-label', 'Play rhythm visualizer');
+    playBtn.setAttribute('aria-label', 'Play audio');
   }
 
-  function stop() {
-    pause();
-    elapsed = 0;
-    progress.style.width = '0%';
-    timeEl.textContent = '0:00';
+  async function playAudio() {
+    try {
+      await audio.play();
+      setPlayingUI();
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(animateBars);
+    } catch (error) {
+      console.error('Audio playback failed:', error);
+    }
+  }
+
+  function pauseAudio() {
+    audio.pause();
+    setPausedUI();
+    cancelAnimationFrame(rafId);
     flattenBars();
   }
 
   playBtn.addEventListener('click', () => {
-    if (isPlaying) pause();
-    else play();
+    if (audio.paused) {
+      playAudio();
+    } else {
+      pauseAudio();
+    }
   });
 
-  // Allow clicking progress bar to seek
-  document.getElementById('audioProgress')?.addEventListener('click', e => {
+  audio.addEventListener('timeupdate', updateProgress);
+
+  audio.addEventListener('loadedmetadata', () => {
+    updateProgress();
+  });
+
+  audio.addEventListener('ended', () => {
+    setPausedUI();
+    cancelAnimationFrame(rafId);
+    progress.style.width = '0%';
+    timeEl.textContent = '0:00';
+    flattenBars();
+    audio.currentTime = 0;
+  });
+
+  progressBar?.addEventListener('click', e => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const pct  = (e.clientX - rect.left) / rect.width;
-    elapsed    = pct * DURATION;
-    if (isPlaying) startTime = Date.now() - elapsed * 1000;
-  });
-})();
+    const pct = (e.clientX - rect.left) / rect.width;
 
+    if (audio.duration) {
+      audio.currentTime = pct * audio.duration;
+      updateProgress();
+
+      if (!audio.paused) {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(animateBars);
+      }
+    }
+  });
+
+})();
 
 /* ── 8. BACK TO TOP ─────────────────────────────────────────────── */
 (function initBackToTop() {

@@ -978,36 +978,47 @@
             <!-- Audio player UI -->
             <div class="audio-player-wrap reveal">
                 <div class="audio-player" id="audioPlayer">
+
                     <div class="audio-player-header">
-                        <span class="audio-icon">♪</span>
-                        <div>
-                            <p class="audio-title">Dhime Rhythm — Dee Pyākhan Procession</p>
-                            <p class="audio-sub">Traditional Newar Devotional Music · Kilagha, Kathmandu</p>
-                        </div>
+                    <span class="audio-icon">♪</span>
+                    <div>
+                        <p class="audio-title">Dhime Rhythm — Dee Pyākhan Procession</p>
+                        <p class="audio-sub">Traditional Newar Devotional Music · Kilagha, Kathmandu</p>
                     </div>
+                    </div>
+
+                    <!-- Real MP3 audio -->
+                    <audio id="realAudio" preload="metadata">
+                    <source src="/assets/devinach-audio.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                    </audio>
+
                     <!-- Rhythm Visualizer -->
                     <div class="visualizer" id="visualizer" aria-hidden="true">
-                        <div class="viz-bars" id="vizBars"></div>
+                    <div class="viz-bars" id="vizBars"></div>
                     </div>
+
                     <!-- Controls -->
                     <div class="audio-controls">
-                        <button class="audio-btn" id="playBtn" aria-label="Play rhythm visualizer">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                                <polygon points="5,3 19,12 5,21" fill="currentColor" />
-                            </svg>
-                        </button>
-                        <div class="audio-progress-wrap">
-                            <div class="audio-progress" id="audioProgress">
-                                <div class="audio-progress-fill" id="audioProgressFill"></div>
-                            </div>
+                    <button class="audio-btn" id="playBtn" aria-label="Play audio">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                        <polygon points="5,3 19,12 5,21" fill="currentColor"></polygon>
+                        </svg>
+                    </button>
+
+                    <div class="audio-progress-wrap">
+                        <div class="audio-progress" id="audioProgress">
+                        <div class="audio-progress-fill" id="audioProgressFill" style="width: 0%;"></div>
                         </div>
-                        <span class="audio-time" id="audioTime">0:00</span>
                     </div>
+
+                    <span class="audio-time" id="audioTime">0:00</span>
+                    </div>
+
                     <p class="audio-note">
-                        <em>Note: This is an interactive rhythm visualizer representing the traditional dhime drum
-                            pattern. For authentic recordings, visit the Smithsonian Folkways or the University of
-                            Washington ethnomusicology archive.</em>
+                    <em>Note: This audio player includes a real MP3 with an animated rhythm visualizer.</em>
                     </p>
+
                 </div>
             </div>
         </div>
