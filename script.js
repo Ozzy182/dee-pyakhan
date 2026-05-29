@@ -1,5 +1,5 @@
 /* ================================================================
-   KILAGHA DĪ PYĀKHAN — script.js
+   KILAGHA Dee PYĀKHAN — script.js
    Features: loader, particles, nav, scroll reveal, gallery
              lightbox, audio/rhythm visualizer, back-to-top
    ================================================================ */
@@ -447,7 +447,7 @@
 
 /* ── 15. CONSOLE GREETING ────────────────────────────────────────── */
 console.log(
-  '%cकिलाघः दी प्याखं\n%cKilagha Dī Pyākhan — Sacred Masked Dance of Kathmandu\nBuilt with love for the Jyapu Newar community.',
+  '%cकिलाघः दी प्याखं\n%cKilagha Dee Pyākhan — Sacred Masked Dance of Kathmandu\nBuilt with love for the Jyapu Newar community.',
   'font-size:1.4rem;color:#c8732a;font-weight:bold;',
   'font-size:0.9rem;color:#8b1a2e;'
 );
